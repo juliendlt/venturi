@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# IDE
+.idea/
+
+# Données : on versionne les fichiers bruts (raw) et l'arborescence des zones,
+# mais aucun fichier produit par les pipelines.
+/data/**
+!/data/**/
+!/data/raw/**
+!/data/**/.gitkeep
