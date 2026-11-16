@@ -11,6 +11,7 @@ décidé, ses conséquences et les alternatives écartées.
 | [0004](0004-config-independante-du-service.md) | Garder la config indépendante de l'environnement et du service | Acceptée, complétée par 0008 | 2026-11-14 |
 | [0005](0005-versionnement-des-donnees.md) | Versionner les données brutes et l'arborescence des zones | Acceptée | 2026-11-14 |
 | [0006](0006-strategie-de-branches.md) | Structure sur `master`, évolutions sur des branches dédiées | Acceptée | 2026-11-14 |
+| [0007](0007-schemas-bronze-en-chaine.md) | Schémas bronze déclarés en Python, toutes colonnes en chaîne | Acceptée | 2026-11-16 |
 | [0008](0008-ecriture-des-tables-par-une-fonction.md) | Adapter l'écriture au service par une simple fonction | Acceptée | 2026-11-16 |
 
 ## Ajouter une décision

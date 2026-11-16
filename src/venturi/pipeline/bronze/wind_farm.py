@@ -1,6 +1,7 @@
 from ...core.commons.reader import CsvReader
 from ...core.commons.writer import write_table
 from ...core.context import Context
+from ...schema.bronze.wind_farm import wind_farm_schema
 from ..base import Pipeline
 
 
@@ -16,7 +17,7 @@ class BronzeWindFarm(Pipeline):
         table = context.tables.bronze[self.table_key]
 
         context.logger.info("Lecture de %s", source)
-        df = CsvReader(context.spark, source).read()
+        df = CsvReader(context.spark, source, schema=wind_farm_schema).read()
 
         context.logger.info("Écriture de %s", table.full_table_name)
         write_table(df, table, mode="overwrite")
