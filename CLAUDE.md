@@ -60,8 +60,9 @@ table.schema_name       # bronze
   Hive local) : cette adaptation appartient à une couche service, à venir.
 - Code, commentaires, docstrings et messages de commit en français ; identifiants
   (tables, variables, fonctions) en anglais.
-- Git : `master` porte la structure du projet ; chaque évolution se fait sur une
-  branche `feat/<sujet>`.
+- Git : chaque évolution se fait sur une branche `feat/<sujet>`, fusionnée dans
+  `master` par une pull request GitHub (commit de fusion). Jamais de commit direct
+  sur `master`.
 
 ## Décisions d'architecture
 
