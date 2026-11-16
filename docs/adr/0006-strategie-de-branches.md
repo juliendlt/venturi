@@ -15,8 +15,12 @@ L'historique doit rester lisible : on veut distinguer le socle du projet de chaq
   données brutes, arborescence des zones, note de cadrage).
 - Chaque évolution se fait sur une branche `feat/<sujet>` ; la première est
   `feat/tables-config` (configuration des tables).
-- Une branche terminée est fusionnée dans `master` par un commit de fusion
-  (`git merge --no-ff`), pour que chaque sujet reste visible dans l'historique.
+- Une branche terminée est poussée sur GitHub et fusionnée dans `master` par une
+  pull request, avec un commit de fusion (ni squash ni rebase), pour que chaque
+  sujet reste visible dans l'historique.
+- Une fois la pull request fusionnée, la branche est supprimée sur GitHub ; elle
+  peut être conservée en local.
+- Aucun commit ni aucune fusion ne se fait directement sur `master`.
 - Les commits sont signés avec l'identité personnelle de l'auteur, configurée au
   niveau du dépôt et non de la machine.
 
@@ -24,4 +28,6 @@ L'historique doit rester lisible : on veut distinguer le socle du projet de chaq
 
 - Chaque sujet est isolé et relisible indépendamment.
 - L'historique de `master` alterne commits de fusion et commits de branche.
-- Pas de pull request à ce stade : la fusion est faite en local puis poussée.
+- Chaque évolution laisse une pull request consultable sur GitHub, avec sa description.
+- Les commits de fusion sont créés par GitHub, donc signés avec l'adresse `noreply`
+  du compte et non avec l'adresse configurée dans le dépôt.
