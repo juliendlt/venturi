@@ -1,0 +1,8 @@
+# Liste des paths des fichiers VENTURI, par source
+
+oreol:
+  wind_turbine:
+    file_path: "data/raw/oreol/wind_turbine/"
+
+  wind_farm:
+    file_path: "data/raw/oreol/wind_farm/"
