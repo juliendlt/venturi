@@ -86,7 +86,9 @@ table.schema_name       # bronze
   (tables, variables, fonctions) en anglais.
 - Git : chaque évolution se fait sur une branche `feat/<sujet>`, fusionnée dans
   `master` par une pull request GitHub (commit de fusion). Jamais de commit direct
-  sur `master`.
+  sur `master`. Les pull requests se créent et se fusionnent avec la CLI `gh`
+  (`gh pr create --base master`, puis `gh pr merge <n> --merge`), branche distante
+  supprimée ensuite (ADR 0006).
 
 ## Décisions d'architecture
 

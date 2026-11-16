@@ -56,5 +56,14 @@ src/venturi/
 ## Contribuer
 
 Chaque évolution se fait sur une branche `feat/<sujet>` et est fusionnée dans
-`master` par une pull request, avec un commit de fusion. Les décisions
-structurantes sont consignées dans [docs/adr](docs/adr/README.md).
+`master` par une pull request, avec un commit de fusion. Les pull requests passent
+par la [CLI GitHub](https://cli.github.com/) :
+
+```bash
+git push -u origin feat/<sujet>
+gh pr create --base master --title "<titre>" --body "<description>"
+gh pr merge <numéro> --merge
+git push origin --delete feat/<sujet>
+```
+
+Les décisions structurantes sont consignées dans [docs/adr](docs/adr/README.md).
