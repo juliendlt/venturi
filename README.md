@@ -1,0 +1,60 @@
+# VENTURI – data prep
+
+Préparation des données du projet **VENTURI** : analyse des pertes de production
+éolienne et de leurs causes racines. Le besoin fonctionnel est décrit dans la
+[note de cadrage](docs/projet_VENTURI_cadrage.md).
+
+Les données suivent une architecture en médaillon :
+
+| Zone | Rôle | État |
+|---|---|---|
+| `bronze` | Copie fidèle des sources, toutes colonnes en chaîne | registre OREOL (parcs, aérogénérateurs) |
+| `silver` | Données typées et nettoyées, par entité métier | à écrire |
+| `gold` | Tables d'analyse (dimensions, faits, agrégats) | à écrire |
+
+## Prérequis
+
+- [uv](https://docs.astral.sh/uv/) et Python 3.12 ou plus
+- Java 17 ou 21 (Spark 4)
+
+## Démarrage
+
+```bash
+uv sync                          # installe l'environnement et la commande venturi
+uv run venturi --list            # pipelines disponibles
+uv run venturi bronze.wind_farm  # lance un pipeline
+```
+
+En local, Spark tourne sur le poste avec Delta et les tables sont écrites sous
+`data/<zone>/`. Sur un runtime Databricks, elles sont écrites dans Unity Catalog
+sous leur nom complet (`venturi.bronze.oreol_parc`, …).
+
+## Organisation
+
+```
+config/tables.yaml     tables du projet, par zone
+config/landing.yaml    fichiers bruts, par source
+data/raw/              fichiers bruts (versionnés)
+docs/adr/              décisions d'architecture
+src/venturi/
+  main.py              point d'entrée de la commande venturi
+  core/                session Spark, contexte, readers et writers, modèles
+  schema/              schémas Spark déclarés, par zone
+  pipeline/            pipelines, par zone, et leur registre
+```
+
+## Ajouter un pipeline
+
+1. Déclarer la table dans `config/tables.yaml`, en suivant la
+   [nomenclature](docs/adr/0002-nomenclature-des-tables.md).
+2. Pour une source brute, déclarer le fichier dans `config/landing.yaml` et son
+   schéma dans `src/venturi/schema/`.
+3. Écrire une classe héritant de `Pipeline` dans `src/venturi/pipeline/<zone>/`,
+   qui écrit avec `write_table`.
+4. L'ajouter au registre `src/venturi/pipeline/registry.py`.
+
+## Contribuer
+
+Chaque évolution se fait sur une branche `feat/<sujet>` et est fusionnée dans
+`master` par une pull request, avec un commit de fusion. Les décisions
+structurantes sont consignées dans [docs/adr](docs/adr/README.md).
