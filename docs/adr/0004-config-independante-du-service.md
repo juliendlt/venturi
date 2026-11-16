@@ -1,6 +1,6 @@
 # 0004 – Garder la config indépendante de l'environnement et du service
 
-- **Statut** : Acceptée
+- **Statut** : Acceptée, complétée par [0008](0008-ecriture-des-tables-par-une-fonction.md)
 - **Date** : 2026-11-14
 
 ## Contexte
@@ -20,7 +20,9 @@ pas encore fixé.
   (`<catalogue>.<schéma>.<table>`), dont le format est validé, et expose
   `catalog_name`, `schema_name` et `table_name`.
 - L'adaptation au service et à l'environnement (catalogue réel, stockage) sera
-  traitée dans une couche service dédiée, plus tard.
+  traitée dans une couche service dédiée, plus tard. *Mise à jour : cette adaptation
+  est faite par la fonction `write_table`, et non par une couche dédiée ; voir
+  [0008](0008-ecriture-des-tables-par-une-fonction.md).*
 
 ## Conséquences
 

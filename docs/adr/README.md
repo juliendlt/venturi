@@ -8,9 +8,10 @@ décidé, ses conséquences et les alternatives écartées.
 | [0001](0001-configuration-des-tables-en-yaml.md) | Déclarer les tables dans un YAML validé par pydantic | Acceptée | 2026-11-14 |
 | [0002](0002-nomenclature-des-tables.md) | Nomenclature catalogue / schéma / table | Acceptée | 2026-11-14 |
 | [0003](0003-identifiant-logique-et-nom-physique.md) | Séparer l'identifiant logique du nom physique d'une table | Acceptée | 2026-11-14 |
-| [0004](0004-config-independante-du-service.md) | Garder la config indépendante de l'environnement et du service | Acceptée | 2026-11-14 |
+| [0004](0004-config-independante-du-service.md) | Garder la config indépendante de l'environnement et du service | Acceptée, complétée par 0008 | 2026-11-14 |
 | [0005](0005-versionnement-des-donnees.md) | Versionner les données brutes et l'arborescence des zones | Acceptée | 2026-11-14 |
 | [0006](0006-strategie-de-branches.md) | Structure sur `master`, évolutions sur des branches dédiées | Acceptée | 2026-11-14 |
+| [0008](0008-ecriture-des-tables-par-une-fonction.md) | Adapter l'écriture au service par une simple fonction | Acceptée | 2026-11-16 |
 
 ## Ajouter une décision
 
