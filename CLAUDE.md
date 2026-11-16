@@ -33,6 +33,8 @@ uv run venturi bronze.wind_farm                # lancer un pipeline
 - Les lectures et écritures passent par `core/commons/reader.py` et `writer.py`,
   avec les options typées de `core/commons/options.py`. Une table de `tables.yaml`
   s'écrit avec `write_table(df, table, mode)` (ADR 0008).
+- Un CSV bronze se lit avec son schéma déclaré dans `src/venturi/schema/bronze/`
+  (ADR 0007).
 - La session Spark est créée uniquement dans `src/venturi/core/spark.py`.
 
 ## Structure
@@ -48,6 +50,7 @@ src/venturi/core/context.py Context transmis aux pipelines
 src/venturi/core/spark.py   création de la session Spark
 src/venturi/core/commons/   readers, writers et options Spark
 src/venturi/core/model/     modèles pydantic (TableModel, TablesModel)
+src/venturi/schema/         schémas StructType par zone, sous la clé de tables.yaml
 src/venturi/core/exception/ exceptions du projet (vide)
 src/venturi/pipeline/       Pipeline, registre, pipelines par zone
 src/venturi/utils/          utilitaires (vide)
@@ -77,6 +80,8 @@ table.schema_name       # bronze
   nécessaire. Ne pas introduire de couche d'abstraction par anticipation.
 - La config ne connaît ni l'environnement ni le service d'exécution (Databricks,
   Hive local) : cette adaptation se limite à `write_table` (ADR 0008).
+- Schémas Spark : un `StructField` écrit par colonne, jamais généré par une boucle ;
+  tout en `StringType` en bronze (ADR 0007).
 - Code, commentaires, docstrings et messages de commit en français ; identifiants
   (tables, variables, fonctions) en anglais.
 - Git : chaque évolution se fait sur une branche `feat/<sujet>`, fusionnée dans
