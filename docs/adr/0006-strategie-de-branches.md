@@ -18,6 +18,19 @@ L'historique doit rester lisible : on veut distinguer le socle du projet de chaq
 - Une branche terminée est poussée sur GitHub et fusionnée dans `master` par une
   pull request, avec un commit de fusion (ni squash ni rebase), pour que chaque
   sujet reste visible dans l'historique.
+- Les pull requests se créent et se fusionnent en ligne de commande avec la CLI
+  GitHub (`gh`), sans passer par l'interface web :
+
+  ```bash
+  git push -u origin feat/<sujet>
+  gh pr create --base master --title "<titre>" --body "<description>"
+  gh pr merge <numéro> --merge
+  git push origin --delete feat/<sujet>
+  ```
+
+- Des branches empilées (chacune partant de la précédente) se fusionnent dans
+  l'ordre, une pull request à la fois vers `master` : après chaque fusion, la
+  suivante ne montre plus que ses propres commits.
 - Une fois la pull request fusionnée, la branche est supprimée sur GitHub ; elle
   peut être conservée en local.
 - Aucun commit ni aucune fusion ne se fait directement sur `master`.
