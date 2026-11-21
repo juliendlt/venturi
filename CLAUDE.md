@@ -41,8 +41,11 @@ uv run venturi bronze.wind_farm                # lancer un pipeline
   ligne par colonne cible, colonnes en anglais, `cast` strict (ADR 0009).
 - Un pipeline gold lit les tables silver avec `read_table` et les transforme par une
   fonction `transform` : jointure à gauche, puis un seul `select` (ADR 0010).
+- Les agrégats gold par département et par région lisent `gold.wind_turbine`
+  (ADR 0012).
 - Ordre de lancement : bronze, puis silver, puis gold, pour `wind_farm` et
-  `wind_turbine`.
+  `wind_turbine` ; enfin `gold.wind_turbine_department` et
+  `gold.wind_turbine_region`.
 - La session Spark est créée uniquement dans `src/venturi/core/spark.py`.
 
 ## Structure

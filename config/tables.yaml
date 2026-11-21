@@ -29,3 +29,11 @@ gold:
     full_table_name: venturi.gold.dim_wind_farm
     table_path: data/gold/dim_wind_farm
     version: 1
+  wind_turbine_department:
+    full_table_name: venturi.gold.agg_wind_turbine_department
+    table_path: data/gold/agg_wind_turbine_department
+    version: 1
+  wind_turbine_region:
+    full_table_name: venturi.gold.agg_wind_turbine_region
+    table_path: data/gold/agg_wind_turbine_region
+    version: 1
