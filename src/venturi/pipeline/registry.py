@@ -6,10 +6,14 @@ Pour rendre un pipeline exécutable : l'ajouter à la liste ci-dessous.
 from .base import Pipeline
 from .bronze.wind_farm import BronzeWindFarm
 from .bronze.wind_turbine import BronzeWindTurbine
+from .silver.wind_farm import SilverWindFarm
+from .silver.wind_turbine import SilverWindTurbine
 
 _PIPELINES: list[type[Pipeline]] = [
     BronzeWindFarm,
     BronzeWindTurbine,
+    SilverWindFarm,
+    SilverWindTurbine,
 ]
 
 
