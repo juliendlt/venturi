@@ -20,4 +20,12 @@ silver:
     table_path: data/silver/wind_farm
     version: 1
 
-gold: {}
+gold:
+  wind_turbine:
+    full_table_name: venturi.gold.dim_wind_turbine
+    table_path: data/gold/dim_wind_turbine
+    version: 1
+  wind_farm:
+    full_table_name: venturi.gold.dim_wind_farm
+    table_path: data/gold/dim_wind_farm
+    version: 1

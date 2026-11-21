@@ -5,8 +5,9 @@ et de leurs causes racines. Le besoin fonctionnel est décrit dans
 `docs/projet_VENTURI_cadrage.md`.
 
 Le projet est à son début : la structure, les données brutes et la configuration des
-tables existent, ainsi que le point d'entrée, les deux pipelines d'ingestion
-bronze et les deux pipelines silver ; la zone gold reste à écrire.
+tables existent, ainsi que le point d'entrée et les pipelines bronze, silver et gold
+du registre OREOL (parcs, aérogénérateurs). Les données SCADA, météo et prix du
+cadrage restent à intégrer.
 
 ## Commandes
 
@@ -38,6 +39,10 @@ uv run venturi bronze.wind_farm                # lancer un pipeline
 - Un pipeline silver lit la table bronze de même clé avec `read_table(spark, table)`
   et la transforme par une fonction `transform(bronze)` : un seul `select`, une
   ligne par colonne cible, colonnes en anglais, `cast` strict (ADR 0009).
+- Un pipeline gold lit les tables silver avec `read_table` et les transforme par une
+  fonction `transform` : jointure à gauche, puis un seul `select` (ADR 0010).
+- Ordre de lancement : bronze, puis silver, puis gold, pour `wind_farm` et
+  `wind_turbine`.
 - La session Spark est créée uniquement dans `src/venturi/core/spark.py`.
 
 ## Structure
@@ -55,7 +60,7 @@ src/venturi/core/commons/   readers, writers et options Spark
 src/venturi/core/model/     modèles pydantic (TableModel, TablesModel)
 src/venturi/schema/         schémas StructType par zone, sous la clé de tables.yaml
 src/venturi/pipeline/       Pipeline, registre, pipelines par zone
-src/venturi/utils/          utilitaires (vide)
+src/venturi/utils/          utilitaires (conversion Lambert-93 -> WGS84)
 ```
 
 ## Configuration des tables
