@@ -14,6 +14,7 @@ décidé, ses conséquences et les alternatives écartées.
 | [0007](0007-schemas-bronze-en-chaine.md) | Schémas bronze déclarés en Python, toutes colonnes en chaîne | Acceptée | 2026-11-16 |
 | [0008](0008-ecriture-des-tables-par-une-fonction.md) | Adapter l'écriture au service par une simple fonction | Acceptée | 2026-11-16 |
 | [0009](0009-transformations-silver.md) | Règles des transformations silver | Proposée | 2026-11-18 |
+| [0010](0010-dimensions-gold.md) | Dimensions gold des parcs et des aérogénérateurs | Proposée | 2026-11-21 |
 
 ## Ajouter une décision
 

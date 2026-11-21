@@ -10,7 +10,7 @@ Les données suivent une architecture en médaillon :
 |---|---|---|
 | `bronze` | Copie fidèle des sources, toutes colonnes en chaîne | registre OREOL (parcs, aérogénérateurs) |
 | `silver` | Données typées et nettoyées, par entité métier | `wind_farm`, `wind_turbine` |
-| `gold` | Tables d'analyse (dimensions, faits, agrégats) | à écrire |
+| `gold` | Tables d'analyse (dimensions, faits, agrégats) | `dim_wind_farm`, `dim_wind_turbine` |
 
 ## Prérequis
 
@@ -23,6 +23,14 @@ Les données suivent une architecture en médaillon :
 uv sync                          # installe l'environnement et la commande venturi
 uv run venturi --list            # pipelines disponibles
 uv run venturi bronze.wind_farm  # lance un pipeline
+```
+
+Pour alimenter toutes les tables :
+
+```bash
+uv run venturi bronze.wind_farm && uv run venturi bronze.wind_turbine
+uv run venturi silver.wind_farm && uv run venturi silver.wind_turbine
+uv run venturi gold.wind_farm   && uv run venturi gold.wind_turbine
 ```
 
 En local, Spark tourne sur le poste avec Delta et les tables sont écrites sous
