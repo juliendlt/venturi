@@ -10,7 +10,7 @@ Les données suivent une architecture en médaillon :
 |---|---|---|
 | `bronze` | Copie fidèle des sources, toutes colonnes en chaîne | registre OREOL (parcs, aérogénérateurs) |
 | `silver` | Données typées et nettoyées, par entité métier | `wind_farm`, `wind_turbine` |
-| `gold` | Tables d'analyse (dimensions, faits, agrégats) | `dim_wind_farm`, `dim_wind_turbine` |
+| `gold` | Tables d'analyse (dimensions, faits, agrégats) | `dim_wind_farm`, `dim_wind_turbine`, `agg_wind_turbine_department`, `agg_wind_turbine_region` |
 
 ## Prérequis
 
@@ -31,6 +31,7 @@ Pour alimenter toutes les tables :
 uv run venturi bronze.wind_farm && uv run venturi bronze.wind_turbine
 uv run venturi silver.wind_farm && uv run venturi silver.wind_turbine
 uv run venturi gold.wind_farm   && uv run venturi gold.wind_turbine
+uv run venturi gold.wind_turbine_department && uv run venturi gold.wind_turbine_region
 ```
 
 En local, Spark tourne sur le poste avec Delta et les tables sont écrites sous

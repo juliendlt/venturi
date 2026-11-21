@@ -8,6 +8,8 @@ from .bronze.wind_farm import BronzeWindFarm
 from .bronze.wind_turbine import BronzeWindTurbine
 from .gold.wind_farm import GoldWindFarm
 from .gold.wind_turbine import GoldWindTurbine
+from .gold.wind_turbine_department import GoldWindTurbineDepartment
+from .gold.wind_turbine_region import GoldWindTurbineRegion
 from .silver.wind_farm import SilverWindFarm
 from .silver.wind_turbine import SilverWindTurbine
 
@@ -18,6 +20,8 @@ _PIPELINES: list[type[Pipeline]] = [
     SilverWindTurbine,
     GoldWindFarm,
     GoldWindTurbine,
+    GoldWindTurbineDepartment,
+    GoldWindTurbineRegion,
 ]
 
 
