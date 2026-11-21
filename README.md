@@ -25,14 +25,19 @@ uv run venturi --list            # pipelines disponibles
 uv run venturi bronze.wind_farm  # lance un pipeline
 ```
 
-Pour alimenter toutes les tables :
+Pour alimenter toutes les tables puis ouvrir la carte des parcs :
 
 ```bash
 uv run venturi bronze.wind_farm && uv run venturi bronze.wind_turbine
 uv run venturi silver.wind_farm && uv run venturi silver.wind_turbine
 uv run venturi gold.wind_farm   && uv run venturi gold.wind_turbine
 uv run venturi gold.wind_turbine_department && uv run venturi gold.wind_turbine_region
+uv run venturi-map               # http://127.0.0.1:8050/
 ```
+
+La carte est une vue groupée : une bulle par région, puis par département, puis un
+point par parc, puis les aérogénérateurs, selon le zoom. Chaque niveau affiche ses
+chiffres clés (parcs, aérogénérateurs, puissance) et un clic descend au suivant.
 
 En local, Spark tourne sur le poste avec Delta et les tables sont écrites sous
 `data/<zone>/`. Sur un runtime Databricks, elles sont écrites dans Unity Catalog
@@ -47,6 +52,7 @@ data/raw/              fichiers bruts (versionnés)
 docs/adr/              décisions d'architecture
 src/venturi/
   main.py              point d'entrée de la commande venturi
+  app/                 carte interactive (commande venturi-map)
   core/                session Spark, contexte, readers et writers, modèles
   schema/              schémas Spark déclarés, par zone
   pipeline/            pipelines, par zone, et leur registre

@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VENTURI – Carte des parcs éoliens</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root {
+    --panel: #ffffff;
+    --ink: #17212b;
+    --muted: #5d6b79;
+    --line: #dde3ea;
+    --accent: #0b6e8a;
+    --accent-dark: #084f63;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font: 14px/1.45 system-ui, "Segoe UI", Roboto, sans-serif; color: var(--ink); }
+  #map { position: absolute; inset: 0; background: #e8edf1; }
+
+  #panel {
+    position: absolute; z-index: 1000; top: 12px; left: 12px; width: 310px;
+    max-height: calc(100% - 24px); overflow: auto;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 4px 18px rgba(23, 33, 43, .18); padding: 14px 16px;
+  }
+  #panel h1 { font-size: 16px; margin: 0 0 2px; letter-spacing: .02em; }
+  #panel .sub { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 4px; }
+
+  /* Fil d'Ariane des niveaux : région > département > parc > éolienne */
+  #levels { display: flex; gap: 4px; margin-bottom: 12px; }
+  #levels button {
+    flex: 1; padding: 6px 2px; font: inherit; font-size: 12px; cursor: pointer;
+    color: var(--muted); background: #f3f6f9; border: 1px solid var(--line); border-radius: 6px;
+  }
+  #levels button.active { color: #fff; background: var(--accent); border-color: var(--accent); font-weight: 600; }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .stat { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+  .stat b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 11px; }
+  #search {
+    width: 100%; padding: 8px 10px; font: inherit; color: inherit;
+    border: 1px solid var(--line); border-radius: 8px; margin-bottom: 12px;
+  }
+  #search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .legend label { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
+  .legend .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .legend .count { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .legend.disabled { opacity: .45; }
+  #hint {
+    margin-top: 12px; padding: 8px 10px; border-radius: 8px; font-size: 12.5px;
+    background: #eef6f8; color: #0a4d61;
+  }
+  #status {
+    position: absolute; z-index: 1000; inset: 0; display: grid; place-items: center;
+    background: rgba(255, 255, 255, .85); font-size: 15px;
+  }
+
+  .popup h2 { font-size: 14px; margin: 0 0 6px; }
+  .popup table { border-collapse: collapse; }
+  .popup td { padding: 1px 0; vertical-align: top; }
+  .popup td:first-child { color: var(--muted); padding-right: 10px; white-space: nowrap; }
+  .popup button {
+    margin-top: 8px; padding: 5px 10px; font: inherit; cursor: pointer;
+    color: #fff; background: var(--accent); border: 0; border-radius: 6px;
+  }
+
+  /* Bulle d'un groupe (région ou département) */
+  .group-icon { background: none; border: 0; }
+  .group {
+    position: absolute; left: 0; top: 0; transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; cursor: pointer;
+  }
+  .group .bubble {
+    display: grid; place-content: center; text-align: center; border-radius: 50%;
+    color: #fff; background: rgba(11, 110, 138, .88); border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(23, 33, 43, .3); line-height: 1.1;
+  }
+  .group:hover .bubble { background: var(--accent-dark); }
+  .group .bubble b { font-size: 14px; font-variant-numeric: tabular-nums; }
+  .group .bubble small { font-size: 10px; opacity: .9; }
+  .group .caption {
+    margin-top: 3px; padding: 1px 7px; white-space: nowrap; font-size: 11.5px; text-align: center;
+    background: rgba(255, 255, 255, .92); border: 1px solid var(--line); border-radius: 4px;
+  }
+  .group .caption b { display: block; }
+
+  .farm-label {
+    background: rgba(255, 255, 255, .9); border: 1px solid var(--line); border-radius: 4px;
+    box-shadow: none; padding: 1px 6px; font-size: 11.5px; font-weight: 600; color: var(--ink);
+  }
+  .farm-label::before { display: none; }
+  @media (max-width: 640px) {
+    #panel { width: auto; right: 12px; max-height: 45%; }
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<aside id="panel">
+  <h1>VENTURI</h1>
+  <div class="sub">Parcs éoliens et aérogénérateurs – registre OREOL</div>
+
+  <div class="section-title">Niveau affiché</div>
+  <div id="levels"></div>
+
+  <div class="section-title">Dans la vue</div>
+  <div class="stats">
+    <div class="stat"><b id="stat-farms">–</b><span>parcs</span></div>
+    <div class="stat"><b id="stat-turbines">–</b><span>éoliennes</span></div>
+    <div class="stat"><b id="stat-capacity">–</b><span>MW</span></div>
+  </div>
+
+  <input id="search" list="farm-names" placeholder="Rechercher un parc…" autocomplete="off">
+  <datalist id="farm-names"></datalist>
+
+  <div class="section-title">État du parc</div>
+  <div class="legend" id="legend"></div>
+  <div id="hint"></div>
+</aside>
+
+<div id="status">Chargement des données…</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// Niveaux de la vue groupée, du plus large au plus fin. Chaque niveau s'affiche
+// entre minZoom et maxZoom ; `zoom` est celui visé par le fil d'Ariane.
+const LEVELS = [
+  { key: "region",     label: "Régions",      minZoom: 0,  maxZoom: 6,  zoom: 6 },
+  { key: "department", label: "Départements", minZoom: 7,  maxZoom: 8,  zoom: 8 },
+  { key: "farm",       label: "Parcs",        minZoom: 9,  maxZoom: 10, zoom: 10 },
+  { key: "turbine",    label: "Éoliennes",    minZoom: 11, maxZoom: 19, zoom: 12 },
+];
+const levelOf = zoom => LEVELS.find(level => zoom <= level.maxZoom);
+
+const HINTS = {
+  region: "Une bulle par région. Cliquez sur une région pour ses chiffres clés et ses départements.",
+  department: "Une bulle par département. Cliquez sur un département pour ses chiffres clés et ses parcs.",
+  farm: "Un point par parc. Cliquez sur un parc pour ses chiffres clés et ses éoliennes.",
+  turbine: "Une pastille par éolienne. Cliquez sur une éolienne pour sa fiche.",
+};
+
+const NO_STATE = "Non renseigné";
+const STATES = [
+  { key: "En exploitation",            color: "#1a8f5c" },
+  { key: "En construction",            color: "#e08a00" },
+  { key: "En attente de construction", color: "#2f6fd0" },
+  { key: "En démantèlement",           color: "#7a8591" },
+  { key: NO_STATE,                     color: "#9a5bc4" },
+];
+const COLOR = Object.fromEntries(STATES.map(s => [s.key, s.color]));
+const activeStates = new Set(STATES.map(s => s.key));
+
+// Libellés des codes de région et de département (les tables ne portent que les codes).
+const REGION_NAMES = {
+  "11": "Île-de-France", "24": "Centre-Val de Loire", "27": "Bourgogne-Franche-Comté",
+  "28": "Normandie", "32": "Hauts-de-France", "44": "Grand Est", "52": "Pays de la Loire",
+  "53": "Bretagne", "75": "Nouvelle-Aquitaine", "76": "Occitanie",
+  "84": "Auvergne-Rhône-Alpes", "93": "Provence-Alpes-Côte d'Azur", "94": "Corse",
+};
+const DEPARTMENT_NAMES = {
+  "01": "Ain", "02": "Aisne", "03": "Allier", "04": "Alpes-de-Haute-Provence", "05": "Hautes-Alpes",
+  "06": "Alpes-Maritimes", "07": "Ardèche", "08": "Ardennes", "09": "Ariège", "10": "Aube",
+  "11": "Aude", "12": "Aveyron", "13": "Bouches-du-Rhône", "14": "Calvados", "15": "Cantal",
+  "16": "Charente", "17": "Charente-Maritime", "18": "Cher", "19": "Corrèze", "2A": "Corse-du-Sud",
+  "2B": "Haute-Corse", "21": "Côte-d'Or", "22": "Côtes-d'Armor", "23": "Creuse", "24": "Dordogne",
+  "25": "Doubs", "26": "Drôme", "27": "Eure", "28": "Eure-et-Loir", "29": "Finistère",
+  "30": "Gard", "31": "Haute-Garonne", "32": "Gers", "33": "Gironde", "34": "Hérault",
+  "35": "Ille-et-Vilaine", "36": "Indre", "37": "Indre-et-Loire", "38": "Isère", "39": "Jura",
+  "40": "Landes", "41": "Loir-et-Cher", "42": "Loire", "43": "Haute-Loire", "44": "Loire-Atlantique",
+  "45": "Loiret", "46": "Lot", "47": "Lot-et-Garonne", "48": "Lozère", "49": "Maine-et-Loire",
+  "50": "Manche", "51": "Marne", "52": "Haute-Marne", "53": "Mayenne", "54": "Meurthe-et-Moselle",
+  "55": "Meuse", "56": "Morbihan", "57": "Moselle", "58": "Nièvre", "59": "Nord",
+  "60": "Oise", "61": "Orne", "62": "Pas-de-Calais", "63": "Puy-de-Dôme", "64": "Pyrénées-Atlantiques",
+  "65": "Hautes-Pyrénées", "66": "Pyrénées-Orientales", "67": "Bas-Rhin", "68": "Haut-Rhin", "69": "Rhône",
+  "70": "Haute-Saône", "71": "Saône-et-Loire", "72": "Sarthe", "73": "Savoie", "74": "Haute-Savoie",
+  "75": "Paris", "76": "Seine-Maritime", "77": "Seine-et-Marne", "78": "Yvelines", "79": "Deux-Sèvres",
+  "80": "Somme", "81": "Tarn", "82": "Tarn-et-Garonne", "83": "Var", "84": "Vaucluse",
+  "85": "Vendée", "86": "Vienne", "87": "Haute-Vienne", "88": "Vosges", "89": "Yonne",
+  "90": "Territoire de Belfort", "91": "Essonne", "92": "Hauts-de-Seine", "93": "Seine-Saint-Denis",
+  "94": "Val-de-Marne", "95": "Val-d'Oise",
+};
+const regionName = code => REGION_NAMES[code] || `Région ${code ?? "inconnue"}`;
+const departmentName = code => DEPARTMENT_NAMES[code] ? `${DEPARTMENT_NAMES[code]} (${code})` : `Département ${code ?? "inconnu"}`;
+
+const fmt = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
+const fmt0 = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+const esc = v => String(v ?? "–").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const num = (v, unit) => v == null ? "–" : fmt.format(v) + (unit ? " " + unit : "");
+const int = (v, unit) => v == null ? "–" : fmt0.format(v) + (unit ? " " + unit : "");
+const stateOf = farm => (farm && farm.state) || NO_STATE;
+
+const map = L.map("map", { preferCanvas: true, zoomControl: false }).setView([46.6, 2.4], 6);
+L.control.zoom({ position: "topright" }).addTo(map);
+L.control.scale({ imperial: false }).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: '&copy; contributeurs <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · données OREOL',
+}).addTo(map);
+
+const groupLayer = L.layerGroup().addTo(map);
+const farmLayer = L.layerGroup().addTo(map);
+const turbineLayer = L.layerGroup().addTo(map);
+const labelLayer = L.layerGroup().addTo(map);
+
+let regions = [];
+let departments = [];
+let farms = [];
+let turbines = [];
+const farmById = new Map();
+const turbinesByFarm = new Map();
+
+// --- Fiches (popups) --------------------------------------------------------
+
+// Lignes communes aux fiches région et département.
+function groupRows(group) {
+  const share = group.capacity_mw ? Math.round(100 * group.operating_capacity_mw / group.capacity_mw) : null;
+  return `
+      <tr><td>Parcs</td><td>${int(group.farm_count)}</td></tr>
+      <tr><td>Éoliennes</td><td>${int(group.turbine_count)}</td></tr>
+      <tr><td>Puissance</td><td>${int(group.capacity_mw, "MW")}</td></tr>
+      <tr><td>En exploitation</td><td>${int(group.operating_turbine_count)} éoliennes · ${int(group.operating_capacity_mw, "MW")}${share == null ? "" : ` (${share} %)`}</td></tr>
+      <tr><td>Puissance moyenne</td><td>${num(group.avg_turbine_capacity_mw, "MW")} par éolienne</td></tr>
+      <tr><td>Plus haute éolienne</td><td>${num(group.max_tip_height_m, "m")}</td></tr>
+      <tr><td>Constructeur principal</td><td>${esc(group.manufacturer)}</td></tr>`;
+}
+
+function regionPopup(region) {
+  return `<div class="popup">
+    <h2>${esc(regionName(region.code))}</h2>
+    <table>
+      <tr><td>Départements</td><td>${int(region.department_count)}</td></tr>${groupRows(region)}
+    </table>
+    <button type="button" data-drill>Voir les départements</button>
+  </div>`;
+}
+
+function departmentPopup(department) {
+  return `<div class="popup">
+    <h2>${esc(departmentName(department.code))}</h2>
+    <table>
+      <tr><td>Région</td><td>${esc(regionName(department.region))}</td></tr>${groupRows(department)}
+    </table>
+    <button type="button" data-drill>Voir les parcs</button>
+  </div>`;
+}
+
+function farmPopup(farm) {
+  return `<div class="popup">
+    <h2>${esc(farm.name)}</h2>
+    <table>
+      <tr><td>État</td><td>${esc(stateOf(farm))}</td></tr>
+      <tr><td>Statut</td><td>${esc(farm.permit_status)}</td></tr>
+      <tr><td>Puissance</td><td>${num(farm.capacity_mw, "MW")}</td></tr>
+      <tr><td>Éoliennes</td><td>${int(farm.turbine_count)} déclarées · ${int(farm.located_turbine_count)} localisées</td></tr>
+      <tr><td>Constructeur</td><td>${esc(farm.manufacturer)}</td></tr>
+      <tr><td>Mise en service</td><td>${esc(farm.commissioning_date)}</td></tr>
+      <tr><td>Département</td><td>${esc(departmentName(farm.department))}</td></tr>
+    </table>
+    <button type="button" data-drill>Voir les éoliennes</button>
+  </div>`;
+}
+
+function turbinePopup(turbine) {
+  const farm = farmById.get(turbine.farm_id);
+  return `<div class="popup">
+    <h2>${esc(turbine.name)}</h2>
+    <table>
+      <tr><td>Parc</td><td>${esc(farm ? farm.name : null)}</td></tr>
+      <tr><td>Commune</td><td>${esc(turbine.commune)}</td></tr>
+      <tr><td>Modèle</td><td>${esc(turbine.manufacturer)} ${esc(turbine.model)}</td></tr>
+      <tr><td>Puissance</td><td>${num(turbine.capacity_mw, "MW")}</td></tr>
+      <tr><td>Hauteur en bout de pale</td><td>${num(turbine.tip_height_m, "m")}</td></tr>
+      <tr><td>Hauteur du moyeu</td><td>${num(turbine.hub_height_m, "m")}</td></tr>
+      <tr><td>Diamètre du rotor</td><td>${num(turbine.rotor_diameter_m, "m")}</td></tr>
+    </table>
+  </div>`;
+}
+
+// Ouvre la fiche et branche son bouton « Voir … » sur la descente au niveau suivant.
+function bindPopup(layer, html, drill) {
+  layer.bindPopup(html);
+  layer.on("popupopen", event => {
+    const button = event.popup.getElement().querySelector("button[data-drill]");
+    if (button) button.addEventListener("click", drill);
+  });
+  return layer;
+}
+
+// --- Descente d'un niveau ---------------------------------------------------
+
+// Cadre la carte sur l'emprise d'un groupe, en restant dans les zooms du niveau visé.
+function zoomToGroup(group, level) {
+  const bounds = L.latLngBounds([group.south, group.west], [group.north, group.east]);
+  const zoom = Math.min(Math.max(map.getBoundsZoom(bounds), level.minZoom), level.maxZoom);
+  map.closePopup();
+  map.setView(bounds.getCenter(), zoom);
+}
+
+// Cadre la carte sur les éoliennes d'un parc (ou sur le parc s'il n'en a pas).
+function zoomToFarm(farm) {
+  const points = (turbinesByFarm.get(farm.id) || []).map(t => [t.lat, t.lon]);
+  const turbineLevel = LEVELS[3];
+  map.closePopup();
+  if (points.length > 0) {
+    const bounds = L.latLngBounds(points).pad(0.35);
+    const zoom = Math.min(Math.max(map.getBoundsZoom(bounds), turbineLevel.minZoom), 15);
+    map.setView(bounds.getCenter(), zoom);
+  } else {
+    map.setView([farm.lat, farm.lon], 13);
+  }
+}
+
+// --- Dessin -----------------------------------------------------------------
+
+// Bulle d'un groupe : nombre d'éoliennes dans la bulle, nom et puissance dessous.
+function groupMarker(group, name, minSize, scale) {
+  const size = Math.round(Math.max(minSize, Math.sqrt(group.capacity_mw || 0) * scale));
+  const html = `<div class="group">
+    <div class="bubble" style="width:${size}px;height:${size}px">
+      <b>${int(group.turbine_count)}</b>${size >= 52 ? "<small>éoliennes</small>" : ""}
+    </div>
+    <div class="caption"><b>${esc(name)}</b>${int(group.farm_count)} parcs · ${int(group.capacity_mw, "MW")}</div>
+  </div>`;
+  return L.marker([group.lat, group.lon], {
+    icon: L.divIcon({ className: "group-icon", html, iconSize: [0, 0] }),
+    riseOnHover: true,
+  });
+}
+
+function drawRegions() {
+  for (const region of regions) {
+    const marker = groupMarker(region, regionName(region.code), 52, 1.15);
+    bindPopup(marker, regionPopup(region), () => zoomToGroup(region, LEVELS[1])).addTo(groupLayer);
+  }
+}
+
+function drawDepartments(bounds) {
+  for (const department of departments) {
+    if (!bounds.contains([department.lat, department.lon])) continue;
+    const marker = groupMarker(department, departmentName(department.code), 36, 1.6);
+    bindPopup(marker, departmentPopup(department), () => zoomToGroup(department, LEVELS[2])).addTo(groupLayer);
+  }
+}
+
+function drawFarms(zoom) {
+  for (const farm of farms) {
+    if (!activeStates.has(stateOf(farm))) continue;
+    // Rayon croissant avec la puissance du parc et avec le zoom.
+    const radius = Math.max(4, Math.sqrt(farm.capacity_mw || 1) * (0.35 + zoom * 0.09));
+    const marker = L.circleMarker([farm.lat, farm.lon], {
+      radius, weight: 1, color: "#ffffff", fillColor: COLOR[stateOf(farm)], fillOpacity: 0.8,
+    }).bindTooltip(`${esc(farm.name)} · ${int(farm.located_turbine_count)} éoliennes · ${num(farm.capacity_mw, "MW")}`);
+    bindPopup(marker, farmPopup(farm), () => zoomToFarm(farm)).addTo(farmLayer);
+  }
+}
+
+function drawTurbines(zoom, bounds) {
+  const visibleFarms = new Map();
+  for (const turbine of turbines) {
+    if (!bounds.contains([turbine.lat, turbine.lon])) continue;
+    const farm = farmById.get(turbine.farm_id);
+    if (!activeStates.has(stateOf(farm))) continue;
+    L.circleMarker([turbine.lat, turbine.lon], {
+      radius: zoom >= 14 ? 8 : 6, weight: 2, color: "#ffffff", fillColor: COLOR[stateOf(farm)], fillOpacity: 0.95,
+    })
+      .bindTooltip(`${esc(turbine.name)}${farm ? " · " + esc(farm.name) : ""}`)
+      .bindPopup(() => turbinePopup(turbine))
+      .addTo(turbineLayer);
+    if (farm) {
+      const group = visibleFarms.get(farm.id) || { farm, lat: 0, lon: 0, n: 0 };
+      group.lat += turbine.lat; group.lon += turbine.lon; group.n += 1;
+      visibleFarms.set(farm.id, group);
+    }
+  }
+  // Nom de chaque parc, posé au centre de ses éoliennes visibles.
+  for (const { farm, lat, lon, n } of visibleFarms.values()) {
+    L.tooltip({ permanent: true, direction: "top", offset: [0, -10], className: "farm-label", interactive: false })
+      .setLatLng([lat / n, lon / n])
+      .setContent(`${esc(farm.name)} · ${int(farm.located_turbine_count)} éol. · ${num(farm.capacity_mw, "MW")}`)
+      .addTo(labelLayer);
+  }
+}
+
+// Chiffres clés de la zone affichée, tous états confondus.
+function updateViewStats() {
+  const bounds = map.getBounds();
+  const farmIds = new Set();
+  let count = 0;
+  let capacity = 0;
+  for (const turbine of turbines) {
+    if (!bounds.contains([turbine.lat, turbine.lon])) continue;
+    count += 1;
+    capacity += turbine.capacity_mw || 0;
+    farmIds.add(turbine.farm_id);
+  }
+  document.getElementById("stat-farms").textContent = int(farmIds.size);
+  document.getElementById("stat-turbines").textContent = int(count);
+  document.getElementById("stat-capacity").textContent = int(capacity);
+}
+
+function draw() {
+  // Une fiche ouverte appartient à un marqueur : on ne redessine pas dessous.
+  if (map._popup && map._popup.isOpen()) { updateViewStats(); return; }
+
+  const zoom = map.getZoom();
+  const level = levelOf(zoom);
+  const bounds = map.getBounds().pad(0.15);
+
+  groupLayer.clearLayers();
+  farmLayer.clearLayers();
+  turbineLayer.clearLayers();
+  labelLayer.clearLayers();
+
+  if (level.key === "region") drawRegions();
+  else if (level.key === "department") drawDepartments(bounds);
+  else if (level.key === "farm") drawFarms(zoom);
+  else drawTurbines(zoom, bounds);
+
+  for (const button of document.querySelectorAll("#levels button")) {
+    button.classList.toggle("active", button.dataset.level === level.key);
+  }
+  // Le filtre par état s'applique aux parcs et aux éoliennes, pas aux bulles agrégées.
+  const grouped = level.key === "region" || level.key === "department";
+  document.getElementById("legend").classList.toggle("disabled", grouped);
+  document.getElementById("hint").textContent =
+    HINTS[level.key] + (grouped ? " Le filtre par état s'applique à partir du niveau « Parcs »." : "");
+  updateViewStats();
+}
+
+// --- Panneau ----------------------------------------------------------------
+
+function buildLevels() {
+  const container = document.getElementById("levels");
+  for (const level of LEVELS) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = level.label;
+    button.dataset.level = level.key;
+    button.addEventListener("click", () => { map.closePopup(); map.setZoom(level.zoom); });
+    container.appendChild(button);
+  }
+}
+
+function buildLegend() {
+  const counts = {};
+  for (const farm of farms) counts[stateOf(farm)] = (counts[stateOf(farm)] || 0) + 1;
+  const legend = document.getElementById("legend");
+  for (const state of STATES) {
+    const label = document.createElement("label");
+    label.innerHTML = `<input type="checkbox" checked>
+      <span class="dot" style="background:${state.color}"></span>
+      <span>${esc(state.key)}</span><span class="count">${int(counts[state.key] || 0)}</span>`;
+    label.querySelector("input").addEventListener("change", event => {
+      if (event.target.checked) activeStates.add(state.key); else activeStates.delete(state.key);
+      draw();
+    });
+    legend.appendChild(label);
+  }
+}
+
+function buildSearch() {
+  const byLabel = new Map();
+  const options = document.getElementById("farm-names");
+  const sorted = [...farms].sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
+  for (const farm of sorted) {
+    // Plusieurs parcs peuvent porter le même nom : le département les distingue.
+    let label = `${farm.name || farm.id}${farm.department ? " (" + farm.department + ")" : ""}`;
+    if (byLabel.has(label)) label += ` – ${farm.id}`;
+    byLabel.set(label, farm);
+    const option = document.createElement("option");
+    option.value = label;
+    options.appendChild(option);
+  }
+  const search = document.getElementById("search");
+  search.addEventListener("change", () => {
+    const farm = byLabel.get(search.value);
+    if (farm) zoomToFarm(farm);
+  });
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${url} : HTTP ${response.status}`);
+  return response.json();
+}
+
+async function start() {
+  [regions, departments, farms, turbines] = await Promise.all([
+    fetchJson("/api/regions"),
+    fetchJson("/api/departments"),
+    fetchJson("/api/farms"),
+    fetchJson("/api/turbines"),
+  ]);
+
+  // Les plus gros sont dessinés en premier, pour ne pas masquer les petits.
+  regions.sort((a, b) => b.capacity_mw - a.capacity_mw);
+  departments.sort((a, b) => b.capacity_mw - a.capacity_mw);
+  farms.sort((a, b) => (b.capacity_mw || 0) - (a.capacity_mw || 0));
+  for (const farm of farms) farmById.set(farm.id, farm);
+  for (const turbine of turbines) {
+    if (!turbinesByFarm.has(turbine.farm_id)) turbinesByFarm.set(turbine.farm_id, []);
+    turbinesByFarm.get(turbine.farm_id).push(turbine);
+  }
+
+  buildLevels();
+  buildLegend();
+  buildSearch();
+  map.on("moveend", draw);
+  map.on("popupclose", () => setTimeout(draw, 0));
+  draw();
+  document.getElementById("status").remove();
+}
+
+start().catch(error => {
+  document.getElementById("status").textContent = "Erreur de chargement : " + error.message;
+});
+</script>
+</body>
+</html>
