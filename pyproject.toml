@@ -12,6 +12,7 @@ dependencies = [
 
 [project.scripts]
 venturi = "venturi.main:main"
+venturi-map = "venturi.app.server:main"
 
 [build-system]
 requires = ["hatchling"]

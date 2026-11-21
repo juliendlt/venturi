@@ -5,9 +5,9 @@ et de leurs causes racines. Le besoin fonctionnel est décrit dans
 `docs/projet_VENTURI_cadrage.md`.
 
 Le projet est à son début : la structure, les données brutes et la configuration des
-tables existent, ainsi que le point d'entrée et les pipelines bronze, silver et gold
-du registre OREOL (parcs, aérogénérateurs). Les données SCADA, météo et prix du
-cadrage restent à intégrer.
+tables existent, ainsi que le point d'entrée, les pipelines bronze, silver et gold
+du registre OREOL (parcs, aérogénérateurs) et une application de carte. Les données
+SCADA, météo et prix du cadrage restent à intégrer.
 
 ## Commandes
 
@@ -18,10 +18,11 @@ uv sync                                        # installer l'environnement
 uv add --package venturi-data-prep <paquet>    # ajouter une dépendance
 uv run venturi --list                          # pipelines disponibles
 uv run venturi bronze.wind_farm                # lancer un pipeline
+uv run venturi-map                             # carte interactive (lit les tables gold)
 ```
 
 `uv sync` installe le package `venturi` en mode éditable, avec la commande `venturi`
-(`src/venturi/main.py`). Spark 4 demande Java 17 ou 21. Il n'y a pas encore de tests.
+(`src/venturi/main.py`) et la commande `venturi-map` (`src/venturi/app/server.py`). Spark 4 demande Java 17 ou 21. Il n'y a pas encore de tests.
 
 ## Pipelines
 
@@ -62,6 +63,7 @@ src/venturi/core/spark.py   création de la session Spark
 src/venturi/core/commons/   readers, writers et options Spark
 src/venturi/core/model/     modèles pydantic (TableModel, TablesModel)
 src/venturi/schema/         schémas StructType par zone, sous la clé de tables.yaml
+src/venturi/app/            carte interactive : serveur HTTP et page Leaflet (ADR 0011)
 src/venturi/pipeline/       Pipeline, registre, pipelines par zone
 src/venturi/utils/          utilitaires (conversion Lambert-93 -> WGS84)
 ```
