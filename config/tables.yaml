@@ -2,11 +2,11 @@
 
 bronze:
   wind_turbine:
-    full_table_name: venturi.bronze.oreol_aerogenerateur
+    full_table_name: venturi.bronze.wind_turbine
     table_path: data/bronze/wind_turbine
     version: 1
   wind_farm:
-    full_table_name: venturi.bronze.oreol_parc
+    full_table_name: venturi.bronze.wind_farm
     table_path: data/bronze/wind_farm
     version: 1
 

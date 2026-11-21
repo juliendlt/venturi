@@ -9,7 +9,7 @@ Les données suivent une architecture en médaillon :
 | Zone | Rôle | État |
 |---|---|---|
 | `bronze` | Copie fidèle des sources, toutes colonnes en chaîne | registre OREOL (parcs, aérogénérateurs) |
-| `silver` | Données typées et nettoyées, par entité métier | à écrire |
+| `silver` | Données typées et nettoyées, par entité métier | `wind_farm`, `wind_turbine` |
 | `gold` | Tables d'analyse (dimensions, faits, agrégats) | à écrire |
 
 ## Prérequis
@@ -27,7 +27,7 @@ uv run venturi bronze.wind_farm  # lance un pipeline
 
 En local, Spark tourne sur le poste avec Delta et les tables sont écrites sous
 `data/<zone>/`. Sur un runtime Databricks, elles sont écrites dans Unity Catalog
-sous leur nom complet (`venturi.bronze.oreol_parc`, …).
+sous leur nom complet (`venturi.bronze.wind_farm`, …).
 
 ## Organisation
 
